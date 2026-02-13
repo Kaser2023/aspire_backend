@@ -1088,10 +1088,10 @@ END //
 CREATE PROCEDURE IF NOT EXISTS `sp_generate_invoice_number`(OUT inv_number VARCHAR(50))
 BEGIN
   DECLARE payment_count INT;
-  DECLARE year_month VARCHAR(6);
-  SET year_month = DATE_FORMAT(CURDATE(), '%Y%m');
+  DECLARE v_year_month VARCHAR(6);
+  SET v_year_month = DATE_FORMAT(CURDATE(), '%Y%m');
   SELECT COUNT(*) INTO payment_count FROM `payments`;
-  SET inv_number = CONCAT('INV-', year_month, '-', LPAD(payment_count + 1, 6, '0'));
+  SET inv_number = CONCAT('INV-', v_year_month, '-', LPAD(payment_count + 1, 6, '0'));
 END //
 
 -- Update expired subscriptions (called daily by event)
