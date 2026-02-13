@@ -1,0 +1,46 @@
+[
+  {
+    "id": 1,
+    "name": {
+      "en": "Sport Bottle",
+      "ar": "زجاجة رياضية"
+    },
+    "description": {
+      "en": "Premium quality water bottle with ASPIRE Academy logo",
+      "ar": "زجاجة مياه عالية الجودة بشعار أكاديمية أسباير"
+    },
+    "price": 35,
+    "badge": {
+      "en": "New",
+      "ar": "جديد",
+      "color": "bg-primary"
+    },
+    "image_url": null,
+    "is_active": true,
+    "created_by": null,
+    "created_at": "2026-02-11T00:00:00.000Z",
+    "updated_at": "2026-02-11T00:00:00.000Z"
+  },
+  {
+    "id": 2,
+    "name": {
+      "en": "Official Jersey",
+      "ar": "القميص الرسمي"
+    },
+    "description": {
+      "en": "Professional training jersey with academy design",
+      "ar": "قميص تدريب احترافي بتصميم الأكاديمية"
+    },
+    "price": 100,
+    "badge": {
+      "en": "Best Seller",
+      "ar": "الأكثر مبيعاً",
+      "color": "bg-green-500"
+    },
+    "image_url": null,
+    "is_active": true,
+    "created_by": null,
+    "created_at": "2026-02-11T00:00:00.000Z",
+    "updated_at": "2026-02-11T00:00:00.000Z"
+  }
+]
