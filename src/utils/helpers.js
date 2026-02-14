@@ -70,18 +70,31 @@ const formatPaginationResponse = (data, page, limit) => {
  * @returns {string} Formatted phone number
  */
 const formatPhoneNumber = (phone, countryCode = '+966') => {
-  // Remove all non-numeric characters
-  let cleaned = phone.replace(/\D/g, '');
-  
-  // Remove leading zeros
-  cleaned = cleaned.replace(/^0+/, '');
-  
-  // If starts with country code without +, add it
-  if (cleaned.startsWith('966')) {
-    return '+' + cleaned;
+  const rawPhone = String(phone || '').trim();
+  const targetCountryCode = String(countryCode || '+966').replace(/\D/g, '') || '966';
+
+  if (!rawPhone) {
+    return `+${targetCountryCode}`;
   }
-  
-  return countryCode + cleaned;
+
+  // Keep digits only for normalization.
+  let digits = rawPhone.replace(/\D/g, '');
+
+  // Convert "00" international prefix to regular international digits.
+  if (digits.startsWith('00')) {
+    digits = digits.slice(2);
+  }
+
+  // If input already contains the selected country code (e.g. +96605xxxxxxx),
+  // remove trunk zeros after the country code to normalize to E.164 style.
+  if (digits.startsWith(targetCountryCode)) {
+    const nationalNumber = digits.slice(targetCountryCode.length).replace(/^0+/, '');
+    return `+${targetCountryCode}${nationalNumber}`;
+  }
+
+  // For local numbers (e.g. 05xxxxxxx), remove trunk zeros then add country code.
+  const nationalNumber = digits.replace(/^0+/, '');
+  return `+${targetCountryCode}${nationalNumber}`;
 };
 
 /**
