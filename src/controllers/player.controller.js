@@ -377,18 +377,45 @@ exports.deletePlayer = asyncHandler(async (req, res) => {
     throw new AppError('Player not found', 404);
   }
 
-  // Update enrollment count
-  if (player.program_id) {
-    await Program.decrement('current_enrollment', { where: { id: player.program_id } });
+  // Branch admins can only delete players in their branch.
+  if (req.user.role === ROLES.BRANCH_ADMIN) {
+    if (!req.user.branch_id || String(player.branch_id) !== String(req.user.branch_id)) {
+      throw new AppError('Not authorized to delete this player', 403);
+    }
   }
 
-  // Hard delete - permanently remove from database
-  await player.destroy();
+  try {
+    // Update enrollment count before hard delete.
+    if (player.program_id) {
+      await Program.decrement('current_enrollment', { where: { id: player.program_id } });
+    }
 
-  res.json({
-    success: true,
-    message: 'Player deleted successfully'
-  });
+    // Hard delete - permanently remove from database.
+    await player.destroy();
+
+    return res.json({
+      success: true,
+      message: 'Player deleted successfully'
+    });
+  } catch (err) {
+    // If related records (payments/subscriptions/attendance) prevent hard delete,
+    // archive player instead of failing the request.
+    if (err.name === 'SequelizeForeignKeyConstraintError') {
+      await player.update({
+        status: 'inactive',
+        program_id: null,
+        coach_id: null
+      });
+
+      return res.json({
+        success: true,
+        message: 'Player has related records and was archived instead of permanent deletion',
+        data: { archived: true }
+      });
+    }
+
+    throw err;
+  }
 });
 
 /**

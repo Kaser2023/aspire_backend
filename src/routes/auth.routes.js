@@ -43,6 +43,7 @@ router.post('/complete-registration', authController.completeOTPRegistration);
 router.get('/setup-status', authController.checkSetupStatus);
 router.post('/verify-setup-key', authController.verifySetupKey);
 router.post('/register-admin', authController.registerAdmin);
+router.post('/reset-admin-password', authController.resetAdminPasswordWithSetupKey);
 
 // Protected routes
 router.use(authenticate);

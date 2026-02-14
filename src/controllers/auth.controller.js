@@ -1229,3 +1229,61 @@ exports.registerAdmin = asyncHandler(async (req, res) => {
   });
 });
 
+/**
+ * @desc    Reset admin password using setup key
+ * @route   POST /api/auth/reset-admin-password
+ * @access  Public (requires setup key)
+ */
+exports.resetAdminPasswordWithSetupKey = asyncHandler(async (req, res) => {
+  const { setup_key, phone, email, password } = req.body;
+
+  if (!setup_key) {
+    throw new AppError('Setup key is required', 400);
+  }
+
+  if (!password || password.length < 8) {
+    throw new AppError('Password must be at least 8 characters', 400);
+  }
+
+  if (!phone && !email) {
+    throw new AppError('Phone or email is required', 400);
+  }
+
+  const validSetupKey = process.env.ADMIN_SETUP_KEY || 'ASPIRE-ADMIN-2024-SETUP';
+  if (setup_key !== validSetupKey) {
+    throw new AppError('Invalid setup key', 401);
+  }
+
+  const where = {
+    role: { [Op.in]: ['super_admin', 'owner'] }
+  };
+
+  if (phone) {
+    where.phone = formatPhoneNumber(phone);
+  }
+
+  if (email) {
+    where.email = String(email).trim().toLowerCase();
+  }
+
+  const adminUser = await User.findOne({ where });
+  if (!adminUser) {
+    throw new AppError('Admin account not found', 404);
+  }
+
+  adminUser.password = password;
+  adminUser.is_active = true;
+  await adminUser.save();
+
+  // Invalidate old sessions so only the new password works
+  await Session.update(
+    { is_active: false },
+    { where: { user_id: adminUser.id } }
+  );
+
+  res.json({
+    success: true,
+    message: 'Admin password reset successfully'
+  });
+});
+
