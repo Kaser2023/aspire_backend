@@ -659,9 +659,30 @@ class SMSScheduler {
 
         // Map audience: accountant announcements only go to parents & players
         let mappedAudience = setting.target_audience;
+        let targetBranchId = null;
         if (!mappedAudience || mappedAudience.type === 'all' || mappedAudience === 'all') {
           // "All" in accountant context means all parents & players, NOT all roles
           mappedAudience = { type: 'roles', roles: ['parent', 'player'] };
+        } else if (mappedAudience.type === 'branches' && Array.isArray(mappedAudience.branches)) {
+          // Convert 'branches' format from ParentAudienceSelector to 'specific' format
+          // Frontend sends: { type: 'branches', branches: [{ branchId, group: 'parents'|'players' }] }
+          // Socket expects: { type: 'specific', branches: { [branchId]: { roles: ['parent','player'] } }, users: [] }
+          const branchesMap = {};
+          for (const entry of mappedAudience.branches) {
+            const bId = entry.branchId;
+            if (!bId) continue;
+            if (!branchesMap[bId]) branchesMap[bId] = { roles: [] };
+            const role = entry.group === 'parents' ? 'parent' : entry.group === 'players' ? 'player' : entry.group;
+            if (!branchesMap[bId].roles.includes(role)) {
+              branchesMap[bId].roles.push(role);
+            }
+          }
+          mappedAudience = { type: 'specific', branches: branchesMap, users: [] };
+          // If only one branch selected, set target_branch_id for proper scoping
+          const branchIds = Object.keys(branchesMap);
+          if (branchIds.length === 1) {
+            targetBranchId = branchIds[0];
+          }
         }
 
         // Create an announcement
@@ -672,7 +693,7 @@ class SMSScheduler {
           priority: 'medium',
           author_id: setting.created_by,
           target_audience: mappedAudience,
-          target_branch_id: null,
+          target_branch_id: targetBranchId,
           target_program_id: null,
           expires_at: null,
           is_pinned: false,

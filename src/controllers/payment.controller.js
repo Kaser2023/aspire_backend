@@ -564,12 +564,23 @@ exports.createAdminReceiptPayment = asyncHandler(async (req, res) => {
     status: paymentStatus,
     receipt_url: receiptUrl,
     pricing_plan_id: pricing_plan_id || null,
+    processed_by: req.user.id,
     metadata: {
       program_id: program_id || null,
       receiptNumber: receipt_number || null,
       created_by: req.user.id,
       created_by_role: req.user.role
     }
+  });
+
+  await logAuditEvent({
+    module: 'payments',
+    entityType: 'payment',
+    entityId: payment.id,
+    action: 'create',
+    actor: req.user,
+    before: null,
+    after: payment
   });
 
   // Create subscription if pricing plan is provided
