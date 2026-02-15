@@ -5,6 +5,8 @@ const { authenticate, authorize } = require('../middleware/auth');
 const { validate } = require('../middleware/validate');
 const { body, query, param } = require('express-validator');
 const { ROLES } = require('../config/constants');
+const { normalizeArabicNumerals } = require('../utils/helpers');
+const normalizeNumerals = (v) => (typeof v === 'string' ? normalizeArabicNumerals(v) : v);
 
 // All routes require authentication
 router.use(authenticate);
@@ -76,10 +78,10 @@ router.post('/session',
     body('program_id').isUUID().withMessage('Program ID is required and must be valid'),
     body('coach_id').isUUID().withMessage('Coach ID is required and must be valid'),
     body('date').isDate().withMessage('Valid date is required'),
-    body('start_time').matches(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9](:[0-5][0-9])?$/).withMessage('Valid start time is required (HH:MM or HH:MM:SS)'),
-    body('end_time').matches(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9](:[0-5][0-9])?$/).withMessage('Valid end time is required (HH:MM or HH:MM:SS)'),
+    body('start_time').customSanitizer(normalizeNumerals).matches(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9](:[0-5][0-9])?$/).withMessage('Valid start time is required (HH:MM or HH:MM:SS)'),
+    body('end_time').customSanitizer(normalizeNumerals).matches(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9](:[0-5][0-9])?$/).withMessage('Valid end time is required (HH:MM or HH:MM:SS)'),
     body('facility').optional().isString().withMessage('Facility must be a string'),
-    body('max_capacity').optional().isInt({ min: 1 }).withMessage('Max capacity must be a positive integer'),
+    body('max_capacity').optional().customSanitizer(normalizeNumerals).isInt({ min: 1 }).withMessage('Max capacity must be a positive integer'),
     body('is_recurring').optional().isBoolean().withMessage('is_recurring must be boolean'),
     body('notes').optional().isString().withMessage('Notes must be a string')
   ],
@@ -94,10 +96,10 @@ router.put('/session/:sessionId',
     param('sessionId').isUUID().withMessage('Invalid session ID'),
     body('coach_id').optional().isUUID().withMessage('Coach ID must be valid'),
     body('date').optional().isDate().withMessage('Valid date is required'),
-    body('start_time').optional().matches(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9](:[0-5][0-9])?$/).withMessage('Valid start time is required (HH:MM or HH:MM:SS)'),
-    body('end_time').optional().matches(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9](:[0-5][0-9])?$/).withMessage('Valid end time is required (HH:MM or HH:MM:SS)'),
+    body('start_time').optional().customSanitizer(normalizeNumerals).matches(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9](:[0-5][0-9])?$/).withMessage('Valid start time is required (HH:MM or HH:MM:SS)'),
+    body('end_time').optional().customSanitizer(normalizeNumerals).matches(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9](:[0-5][0-9])?$/).withMessage('Valid end time is required (HH:MM or HH:MM:SS)'),
     body('facility').optional().isString().withMessage('Facility must be a string'),
-    body('max_capacity').optional().isInt({ min: 1 }).withMessage('Max capacity must be a positive integer'),
+    body('max_capacity').optional().customSanitizer(normalizeNumerals).isInt({ min: 1 }).withMessage('Max capacity must be a positive integer'),
     body('notes').optional().isString().withMessage('Notes must be a string')
   ],
   validate,
@@ -124,8 +126,8 @@ router.post('/validate',
     body('branch_id').isUUID().withMessage('Branch ID is required and must be valid'),
     body('facility').optional().isString().withMessage('Facility must be a string'),
     body('date').isDate().withMessage('Valid date is required'),
-    body('start_time').matches(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9](:[0-5][0-9])?$/).withMessage('Valid start time is required (HH:MM or HH:MM:SS)'),
-    body('end_time').matches(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9](:[0-5][0-9])?$/).withMessage('Valid end time is required (HH:MM or HH:MM:SS)'),
+    body('start_time').customSanitizer(normalizeNumerals).matches(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9](:[0-5][0-9])?$/).withMessage('Valid start time is required (HH:MM or HH:MM:SS)'),
+    body('end_time').customSanitizer(normalizeNumerals).matches(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9](:[0-5][0-9])?$/).withMessage('Valid end time is required (HH:MM or HH:MM:SS)'),
     body('session_id').optional().isUUID().withMessage('Session ID must be valid UUID')
   ],
   validate,

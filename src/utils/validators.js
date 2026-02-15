@@ -1,4 +1,13 @@
 const { body, param, query } = require('express-validator');
+const { normalizeArabicNumerals } = require('./helpers');
+
+/**
+ * Custom sanitizer: converts Eastern Arabic / Extended Arabic-Indic numerals
+ * (٠١٢٣٤٥٦٧٨٩ / ۰۱۲۳۴۵۶۷۸۹) to Western Arabic numerals (0-9) so that
+ * all downstream regex patterns and validators work correctly.
+ */
+const normalizeNumerals = (value) =>
+  typeof value === 'string' ? normalizeArabicNumerals(value) : value;
 
 // Common validation rules
 const commonValidators = {
@@ -17,6 +26,7 @@ const commonValidators = {
     .normalizeEmail(),
 
   password: body('password')
+    .customSanitizer(normalizeNumerals)
     .isLength({ min: 8 })
     .withMessage('Password must be at least 8 characters long')
     .matches(/[a-z]/)
@@ -29,6 +39,7 @@ const commonValidators = {
   phone: body('phone')
     .optional()
     .trim()
+    .customSanitizer(normalizeNumerals)
     .matches(/^[\+]?[(]?[0-9]{3}[)]?[-\s\.]?[0-9]{3}[-\s\.]?[0-9]{4,6}$/)
     .withMessage('Please provide a valid phone number'),
 
@@ -71,6 +82,7 @@ const authValidators = {
   login: [
     body('phone')
       .trim()
+      .customSanitizer(normalizeNumerals)
       .notEmpty()
       .withMessage('Phone number is required'),
     body('password')
@@ -115,6 +127,7 @@ const userValidators = {
       .withMessage('Last name cannot exceed 100 characters'),
     body('phone')
       .trim()
+      .customSanitizer(normalizeNumerals)
       .notEmpty()
       .withMessage('Phone number is required')
       .isLength({ min: 9, max: 15 })
@@ -281,6 +294,7 @@ const programValidators = {
       .withMessage('Branch ID must be a valid UUID'),
     body('price_monthly')
       .optional()
+      .customSanitizer(normalizeNumerals)
       .isDecimal()
       .withMessage('Price must be a valid decimal number'),
     body('type')
@@ -298,10 +312,12 @@ const programValidators = {
       .withMessage('Plan name is required'),
     body('pricing_plans.*.price')
       .optional()
+      .customSanitizer(normalizeNumerals)
       .isDecimal()
       .withMessage('Plan price must be a valid number'),
     body('pricing_plans.*.duration_months')
       .optional()
+      .customSanitizer(normalizeNumerals)
       .isInt({ min: 1 })
       .withMessage('Duration must be at least 1 month')
   ],
@@ -313,6 +329,7 @@ const programValidators = {
       .isLength({ max: 200 }),
     body('price_monthly')
       .optional()
+      .customSanitizer(normalizeNumerals)
       .isDecimal()
       .withMessage('Price must be a valid decimal number'),
     body('pricing_plans')
@@ -336,6 +353,7 @@ const paymentValidators = {
     body('amount')
       .notEmpty()
       .withMessage('Amount is required')
+      .customSanitizer(normalizeNumerals)
       .isDecimal()
       .withMessage('Amount must be a valid decimal number'),
     body('payment_method')

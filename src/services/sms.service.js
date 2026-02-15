@@ -11,6 +11,7 @@
  */
 
 const axios = require('axios');
+const { normalizeArabicNumerals } = require('../utils/helpers');
 
 class SMSService {
   constructor() {
@@ -383,7 +384,7 @@ class SMSService {
 
     const senderId = process.env.PLIVO_SENDER_ID || this.senderName;
     // Plivo wants E.164 format with +
-    const plivoPhone = to.startsWith('+') ? to : `+${to.replace(/\D/g, '')}`;
+    const plivoPhone = to.startsWith('+') ? to : `+${normalizeArabicNumerals(to).replace(/\D/g, '')}`;
 
     const response = await this.plivoClient.messages.create({
       src: senderId,
@@ -547,15 +548,16 @@ class SMSService {
    * Saudi mobile numbers start with 5 and have 9 digits after the country code.
    */
   validatePhoneNumber(phone) {
+    const normalized = normalizeArabicNumerals(phone);
     const saudiPattern = /^(\+966|966|0)?5[0-9]{8}$/;
-    return saudiPattern.test(phone.replace(/\s/g, ''));
+    return saudiPattern.test(normalized.replace(/\s/g, ''));
   }
 
   /**
    * Format any Saudi phone input to international format: +966XXXXXXXXX
    */
   formatPhone(phone) {
-    let cleaned = String(phone).replace(/\D/g, '');
+    let cleaned = normalizeArabicNumerals(String(phone)).replace(/\D/g, '');
 
     if (cleaned.startsWith('00')) {
       cleaned = cleaned.substring(2);
@@ -575,7 +577,7 @@ class SMSService {
    * @private
    */
   _toTaqnyatFormat(phone) {
-    return String(phone).replace(/\D/g, '').replace(/^0+/, '') || phone;
+    return normalizeArabicNumerals(String(phone)).replace(/\D/g, '').replace(/^0+/, '') || phone;
   }
 
   // ═════════════════════════════════════════════

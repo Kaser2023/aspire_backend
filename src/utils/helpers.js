@@ -1,6 +1,18 @@
 const crypto = require('crypto');
 
 /**
+ * Convert Eastern Arabic (٠١٢٣٤٥٦٧٨٩) and Extended Arabic-Indic (۰۱۲۳۴۵۶۷۸۹)
+ * numerals to Western Arabic numerals (0123456789).
+ * @param {string} value - Input string
+ * @returns {string} String with normalized numerals
+ */
+const normalizeArabicNumerals = (value = '') => {
+  return String(value || '')
+    .replace(/[٠-٩]/g, (d) => d.charCodeAt(0) - 0x0660)   // Eastern Arabic
+    .replace(/[۰-۹]/g, (d) => d.charCodeAt(0) - 0x06F0);  // Extended Arabic-Indic
+};
+
+/**
  * Generate a random token
  * @param {number} length - Token length in bytes
  * @returns {string} Hex token
@@ -70,8 +82,8 @@ const formatPaginationResponse = (data, page, limit) => {
  * @returns {string} Formatted phone number
  */
 const formatPhoneNumber = (phone, countryCode = '+966') => {
-  const rawPhone = String(phone || '').trim();
-  const targetCountryCode = String(countryCode || '+966').replace(/\D/g, '') || '966';
+  const rawPhone = normalizeArabicNumerals(String(phone || '').trim());
+  const targetCountryCode = normalizeArabicNumerals(String(countryCode || '+966')).replace(/\D/g, '') || '966';
 
   if (!rawPhone) {
     return `+${targetCountryCode}`;
@@ -162,6 +174,7 @@ const generateCode = (prefix = '', length = 6) => {
 };
 
 module.exports = {
+  normalizeArabicNumerals,
   generateToken,
   generateOTP,
   paginate,
