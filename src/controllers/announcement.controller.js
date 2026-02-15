@@ -112,7 +112,9 @@ exports.getAnnouncementsFeed = asyncHandler(async (req, res) => {
     [Op.or]: [
       { expires_at: null },
       { expires_at: { [Op.gt]: new Date() } }
-    ]
+    ],
+    // Only show announcements published after the user signed up
+    published_at: { [Op.gte]: req.user.created_at }
   };
 
   const announcements = await Announcement.findAll({
